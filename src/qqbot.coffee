@@ -43,6 +43,13 @@ class QQBot
         users = info.minfo.filter (item)-> item.uin == uin
         users.pop()
 
+    # 获取用户card
+    get_user_card_ingroup: (uin, gid)->
+        info = @groupmember_info[gid]
+        cards = info.cards.filter (item)-> item.muin == uin
+        log.info cards
+        cards.pop()
+
 
     # 获取群信息，只支持群 ，支持多关键词搜索
     # @options {key:value}
@@ -204,6 +211,7 @@ class QQBot
             msg.from_uin = value.send_uin # 这才是用户,group消息中 from_uin 是gid
             msg.from_group = @get_group( {gid:msg.from_gid} )
             msg.from_user  = @get_user_ingroup( msg.from_uin ,msg.from_gid )
+            msg.user_card = @get_user_card_ingroup( msg.from_uin, msg.from_gid )
         else if msg.type == 'buddy'
             msg.from_user = @get_user( msg.from_uin )
         msg

@@ -38,7 +38,7 @@ class QQHubotAdapter extends Adapter
     @login_qq skip_login,options,(cookies,auth_info)=>
       @qqbot = new QQBot(cookies,auth_info,options)
       @qqbot.update_buddy_list (ret,error)->
-          log.info '√ buddy list fetched' if ret
+          console.log('√ buddy list fetched') if ret
       @qqbot.listen_group options.groupname , (@group,error)=>
 
         @robot.logger.info "enter long poll mode, have fun"

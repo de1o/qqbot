@@ -46,6 +46,10 @@ module.exports = (content ,send, robot, message)->
     if content.match /^杰杰$/
         send "你说的是传说中的杰杰大美女吗，没错她和你想的一样！"
 
+    if content.match /roll/
+        rd = Math.floor(Math.random()*100+1)
+        send message.user_card.card + "掷出了" + rd
+
     ret = content.match /^echo (.*)/i
     if ret
         send "哈哈，" + ret[1]
