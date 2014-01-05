@@ -48,7 +48,10 @@ module.exports = (content ,send, robot, message)->
 
     if content.match /roll/
         rd = Math.floor(Math.random()*100+1)
-        send message.user_card.card + "掷出了" + rd
+        if rd == 100
+            send message.user_card.card + "掷出了" + rd + ",恭喜爹"
+        else
+            send message.user_card.card + "掷出了" + rd
 
     ret = content.match /^echo (.*)/i
     if ret
