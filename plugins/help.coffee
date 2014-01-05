@@ -7,6 +7,9 @@ HELP_INFO = """
     uptime          #服务运行时间
 """
 
+Log = require 'log'
+log = new Log('debug')
+
 fs = require 'fs'
 Path = require 'path'
 file_path = Path.join __dirname, "..", "package.json"
@@ -29,7 +32,6 @@ start_at = new Date().getTime()
 
 # 问题：方式不优雅，应该是一个模式识别成功，别的就不应调用到
 module.exports = (content ,send, robot, message)->
-
 
     if content.match /^help$/i
         send HELP_INFO

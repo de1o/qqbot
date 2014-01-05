@@ -25,6 +25,7 @@ class QQBot
 
     # @format PROTOCOL `群分组信息格式`
     save_group_info: (@group_info) ->
+      # log.info @group_info
 
     # @format PROTOCOL `群用户信息`
     save_group_member: (group,info)->
@@ -46,19 +47,24 @@ class QQBot
     # 获取用户card
     get_user_card_ingroup: (uin, gid)->
         info = @groupmember_info[gid]
-        cards = info.cards.filter (item)-> item.muin == uin
-        log.info cards
-        cards.pop()
+        if info.cards
+          cards = info.cards.filter (item)-> item.muin == uin
+          cards.pop()
+        else
+          null
 
 
     # 获取群信息，只支持群 ，支持多关键词搜索
     # @options {key:value}
     # @return {gid,code,name,flag}
     get_group: (options)->
+        # info.debug @group_info.gnamelist, "@group_info.gnamelist"
         groups = @group_info.gnamelist.filter (item)->
             for key ,value of options
                 return item[key] == value
         groups.pop()
+
+
 
     # 获取群列表
     # @callback {ret:bool,error}
@@ -211,7 +217,7 @@ class QQBot
             msg.from_uin = value.send_uin # 这才是用户,group消息中 from_uin 是gid
             msg.from_group = @get_group( {gid:msg.from_gid} )
             msg.from_user  = @get_user_ingroup( msg.from_uin ,msg.from_gid )
-            msg.user_card = @get_user_card_ingroup( msg.from_uin, msg.from_gid )
+            msg.user_card = @get_user_card_ingroup( msg.from_uin, msg.from_gid ) or {card: msg.from_user.nick, muin: msg.from_user.uin}
         else if msg.type == 'buddy'
             msg.from_user = @get_user( msg.from_uin )
         msg
@@ -225,14 +231,16 @@ class QQBot
       @update_group_list (ret, e) =>
           log.info '√ group list fetched'
 
-          log.info "fetching groupmember #{name}"
-          @update_group_member {name:name} ,(ret,error)=>
-              log.info '√ group memeber fetched'
-
-              groupinfo = @get_group {name:name}
-              group = new Group(@, groupinfo.gid)
-              @dispatcher.add_listener [group,"dispatch"]
-              callback group
+          groups_name = name.split(";")
+          for gname in groups_name
+            log.info "fetching groupmember #{gname}"
+            @update_group_member {name:gname} ,(ret,error)=>
+                log.info "√ group #{gname} memeber fetched"
+                groupinfo = @get_group {name:gname}
+                group = new Group(@, groupinfo.gid)
+                @dispatcher.add_listener [group,"dispatch"]
+                log.info "dispatched..."
+                callback group
 
 
 ###
@@ -249,6 +257,7 @@ class Group
     on_message: (@msg_cb)->
     dispatch: (content ,send, robot, message)->
         # log.debug 'dispatch',params[0],@msg_cb
+        log.debug message, "gid", @gid
         if message.from_gid == @gid and @msg_cb
             @msg_cb(content ,send, robot, message)
 
