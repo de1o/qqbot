@@ -43,21 +43,25 @@ module.exports = (content ,send, robot, message)->
         send "插件列表：\n" + robot.dispatcher.plugins.join('\r\n')
 
     if content.match /^time$/i
-        send "冥王星引力精准校时：" + new Date()
-
-    if content.match /^杰杰$/
-        send "你说的是传说中的杰杰大美女吗，没错她和你想的一样！"
+        send "神奇海螺为您报时" + new Date()
 
     if content.match /roll/
         rd = Math.floor(Math.random()*100+1)
         if rd == 100
-            send message.user_card.card + "掷出了" + rd + ",恭喜爹"
+            eggs = "，恭喜爹"
+        else if rd == 42
+            eggs = "，您得到了宇宙一切问题的终极答案！"
         else
-            send message.user_card.card + "掷出了" + rd
+            eggs = ""
+        send message.user_card.card + "掷出了" + rd + eggs
 
     ret = content.match /^echo (.*)/i
     if ret
         send "哈哈，" + ret[1]
+
+    ret = content.match /^叫(.*)/i
+    if ret
+        send ret[1]
         
     if content.match /^uptime$/i
       secs = (new Date().getTime() - start_at) / 1000

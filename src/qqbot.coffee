@@ -89,7 +89,7 @@ class QQBot
         api.get_group_member group.code , @auth , (ret,e)=>
             if ret.retcode == 0
                 @save_group_member(group,ret.result)
-            callback(ret.retcode == 0 , e) if callback
+            callback(ret.retcode == 0, ret.result.ginfo.name, e) if callback
 
     # 更新所有群成员
     # @callback (success,total_count,success_count)
@@ -98,7 +98,7 @@ class QQBot
       groups = @group_info.gnamelist || []
       all = groups.length
       for group in groups
-        @update_group_member group , (ret,error)->
+        @update_group_member group , (ret, ret_gname, error)->
           finished += 1; successed += ret
           log.debug "groupmember all#{all} fin#{finished} succ#{successed}"
           callback(successed == all, finished ,successed) if finished == all
@@ -234,8 +234,8 @@ class QQBot
           groups_name = name.split(";")
           for gname in groups_name
             log.info "fetching groupmember #{gname}"
-            @update_group_member {name:gname} ,(ret,error)=>
-                log.info "√ group #{gname} memeber fetched"
+            @update_group_member {name:gname} ,(ret, ret_gname, error)=>
+                log.info "√ group #{ret_gname} memeber fetched"
                 groupinfo = @get_group {name:gname}
                 group = new Group(@, groupinfo.gid)
                 @dispatcher.add_listener [group,"dispatch"]
