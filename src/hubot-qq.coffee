@@ -9,7 +9,8 @@ class QQHubotAdapter extends Adapter
 
   send: (envelope, strings...) ->
     @robot.logger.info "hubot is sending #{strings}"
-    @group.send str for str in strings
+    @groups[envelope.room].send str for str in strings
+    # @group.send str for str in strings
 
   reply: (user, strings...) ->
     @send user, strings...
@@ -19,6 +20,7 @@ class QQHubotAdapter extends Adapter
 
   run: ->
     self = @
+    @groups = []
 
     options =
       account:   process.env.HUBOT_QQ_ID or   2769546520
@@ -41,18 +43,21 @@ class QQHubotAdapter extends Adapter
           console.log('√ buddy list fetched') if ret
 
       groupret = false
-      @qqbot.listen_group options.groupname , (@group,error)=>
+      @qqbot.listen_group options.groupname , (group,_groupname,error)=>
         if groupret == false
           groupret = true
           @robot.logger.info "enter long poll mode, have fun"
           @qqbot.runloop()
           @emit "connected"
 
-        @group.on_message (content ,send, robot, message)=>
+        @groups[_groupname] = group
 
+        group.on_message (content ,send, robot, message)=>
             @robot.logger.info "#{message.from_user.nick} : #{content}"
             # uin changed every-time
-            user = @robot.brain.userForId message.from_uin , name:message.from_user.nick , room:options.groupname
+            user = @robot.brain.userForId message.from_uin , name:message.user_card.card , room: message.from_group.name
+            # console.log "call receive method"
+            # console.log user, content, message
             @receive new TextMessage user, content, message.uid
 
 

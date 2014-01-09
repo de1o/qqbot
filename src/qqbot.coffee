@@ -1,3 +1,4 @@
+{Robot, Adapter, EnterMessage, LeaveMessage, TextMessage} = require('hubot')
 api = require './qqapi'
 Log = require 'log'
 Dispatcher = require './dispatcher'
@@ -19,6 +20,7 @@ class QQBot
         api.cookies @cookies
         @api = api
         @dispatcher = new Dispatcher(@config.plugins)
+
 
     # @format PROTOCOL `用户分组信息格式`
     save_buddy_info: (@buddy_info)->
@@ -58,7 +60,7 @@ class QQBot
     # @options {key:value}
     # @return {gid,code,name,flag}
     get_group: (options)->
-        # info.debug @group_info.gnamelist, "@group_info.gnamelist"
+        # log.debug @group_info
         groups = @group_info.gnamelist.filter (item)->
             for key ,value of options
                 return item[key] == value
@@ -100,7 +102,6 @@ class QQBot
       for group in groups
         @update_group_member group , (ret, ret_gname, error)->
           finished += 1; successed += ret
-          log.debug "groupmember all#{all} fin#{finished} succ#{successed}"
           callback(successed == all, finished ,successed) if finished == all
 
     # 更新好友和群成员
@@ -181,6 +182,7 @@ class QQBot
 
 
     _handle_poll_event : (event) ->
+        # log.debug "event:", event
         switch event.poll_type
           when 'group_message' then @_on_message(event)
           when 'message'       then @_on_message(event)
@@ -236,11 +238,12 @@ class QQBot
             log.info "fetching groupmember #{gname}"
             @update_group_member {name:gname} ,(ret, ret_gname, error)=>
                 log.info "√ group #{ret_gname} memeber fetched"
-                groupinfo = @get_group {name:gname}
+                groupinfo = @get_group {name:ret_gname}
+                log.info "group id", groupinfo.gid, "^^^^^^^^^^^^^"
                 group = new Group(@, groupinfo.gid)
                 @dispatcher.add_listener [group,"dispatch"]
                 log.info "dispatched..."
-                callback group
+                callback group, ret_gname
 
 
 ###
@@ -257,7 +260,7 @@ class Group
     on_message: (@msg_cb)->
     dispatch: (content ,send, robot, message)->
         # log.debug 'dispatch',params[0],@msg_cb
-        log.debug message, "gid", @gid
+        # log.debug message, "gid", @gid
         if message.from_gid == @gid and @msg_cb
             @msg_cb(content ,send, robot, message)
 
