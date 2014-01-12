@@ -129,6 +129,42 @@ exports.send_msg_2buddy = (to_uin , msg , auth_opts ,callback)->
         log.debug 'send2user',jsons ret
         callback( ret , e )
 
+exports.upload_img_2group = (auth_opts, callback)->
+    url = "http://up.web2.qq.com/cgi-bin/cface_upload?time=" + Date.now().toString()
+    params = [
+        {name: "from", value: "control"}
+        {name: "f", value: "EQQ.Model.ChatMsg.callbackSendPicGroup"}
+        {name: "vfwebqq", value: auth_opts.vfwebqq}
+        {name: "custom_face", filename: "group_upload.jpg", "Content-Type": "image/jpeg", value: "/Users/Sai/Downloads/hailuo.jpg"} # TODO这个value待获取
+        {name: "fileid", value: 8}
+    ]
+    log.debug "sending upload request"
+    client.mpost {url:url}, params, (tmpImg, e) =>
+        log.debug "upload img 2 group", tmpImg
+        callback(tmpImg, e)
+
+
+exports.send_tmpimg_2group = (tmpImg, gid, gcode, auth_opts, callback)->
+    url = "http://d.web2.qq.com/channel/send_qun_msg2"
+    opt = auth_opts
+    r = 
+        group_uin: gid
+        group_code: gcode
+        key: "m357cqr9m3Q6cSDT"
+        sig: "e6c60ad563e63c60408cf2718b577a371957c00710909ad7a12178273420813cdacb1eef39b7ca5c4f3387bfa00405bf435db1799395d4e7"
+        content: "[[\"cface\",\"group\",\"#{tmpImg}\"],\"\",\"\",[\"font\",{\"name\":\"微软雅黑\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"666699\"}]]"
+        clientid: opt.clientid
+        psessionid: opt.psessionid
+    
+    params = 
+        r: jsons r
+        clientid: opt.clientid
+        psessionid: opt.psessionid
+    log.debug "sending image..."
+    client.post {url: url}, params, (ret, e)->
+        log.debug "send_tmpimg_2group", jsons ret
+        callback(ret, e)
+
 #  @param gid: gid
 #  @param msg, 消息
 #  @param auth_opts: [clientid,psessionid]

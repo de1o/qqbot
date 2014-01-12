@@ -140,6 +140,8 @@ test_login_on_authmodule = ->
         defaults.data 'cookie', cookies
         defaults.save()
         api.cookies( cookies )
+        api.upload_img_2group auth_info, (ret, e)->  # 测试upload img
+            log jsons ret, e
         api.long_poll auth_info , (ret)->
             log jsons ret
 

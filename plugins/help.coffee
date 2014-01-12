@@ -57,12 +57,16 @@ module.exports = (content ,send, robot, message)->
 
     ret = content.match /^echo (.*)/i
     if ret
-        send "哈哈，" + ret[1]
+        send ret[1]
 
     ret = content.match /^叫(.*)/i
     if ret
         send ret[1]
-        
+
+    ret = content.match /^有问题$/i
+    if ret
+        send "hailuo.jpg"
+
     if content.match /^uptime$/i
       secs = (new Date().getTime() - start_at) / 1000
       aday  = 86400 

@@ -79,6 +79,7 @@ class QQBot
     # 获取好友列表
     # @callback (ret:bool, error)
     update_buddy_list: (callback)->
+        log.debug "try updating buddy list"
         @api.get_buddy_list @auth , (ret,e)=>
             @save_buddy_info ret.result if ret.retcode == 0
             callback( ret.retcode == 0, e || 'retcode isnot 0' ) if callback
@@ -150,7 +151,20 @@ class QQBot
     reply_message: (message, content, callback)->
         log.info "发送消息：",content
         if message.type == 'group'
-            @api.send_msg_2group  message.from_gid , content , @auth, (ret,e)->
+            log.info "content: ---- ", content, "----"
+            if content.match "(hailuo.jpg|jPg|jpeg)$"
+              log.info "re matched"
+              group = @groupmember_info[message.from_gid].ginfo
+              log.info group
+              @api.upload_img_2group @auth, (tmpImg, e)=>
+                log.info "after upload #{group}"
+                log.info "reply_message pic uploaded!"
+                @api.send_tmpimg_2group tmpImg, group.gid, group.code, @auth, (ret, e)->
+                  log.info "reply_message pic sent!"
+                  callback(ret, e) if callback
+            else
+              log.info "re not matched"
+              @api.send_msg_2group  message.from_gid , content , @auth, (ret,e)->
                 callback(ret,e) if callback
         else if message.type == 'buddy'
             @api.send_msg_2buddy message.from_uin , content , @auth , (ret,e)->
@@ -246,6 +260,7 @@ class QQBot
                 callback group, ret_gname
 
 
+
 ###
  为hubot专门使用，提供两个方法
  - send
@@ -253,9 +268,11 @@ class QQBot
 ###
 class Group
     constructor: (@bot,@gid)->
+    # this send method seems no useful?
     send: (content , callback)->
         @bot.send_message_to_group  @gid , content , (ret,e)->
             callback(ret,e) if callback
+
 
     on_message: (@msg_cb)->
     dispatch: (content ,send, robot, message)->
