@@ -151,12 +151,9 @@ class QQBot
     reply_message: (message, content, callback)->
         log.info "发送消息：",content
         if message.type == 'group'
-            log.info "content: ---- ", content, "----"
-            if content.match "(hailuo.jpg|jPg|jpeg)$"
-              log.info "re matched"
+            if content.match "(jpg|jPg|png|jpeg)$"
               group = @groupmember_info[message.from_gid].ginfo
-              log.info group
-              @api.upload_img_2group @auth, (tmpImg, e)=>
+              @api.upload_img_2group content, @auth, (tmpImg, e)=>
                 log.info "after upload #{group}"
                 log.info "reply_message pic uploaded!"
                 @api.send_tmpimg_2group tmpImg, group.gid, group.code, @auth, (ret, e)->
@@ -173,8 +170,15 @@ class QQBot
     # 发送群消息
     send_message_to_group: (gid, content, callback)->
       log.info "send msg #{content} to group#{gid}"
-      api.send_msg_2group  gid , content , @auth, (ret,e)->
-        callback(ret,e) if callback
+      if content.match "(jpg|jPg|png|jpeg)$"
+        group = @groupmember_info[gid].ginfo
+        @api.upload_img_2group content, @auth, (tmpImg, e)=>
+          @api.send_tmpimg_2group tmpImg, gid, group.code, @auth, (ret, e)->
+            log.info "reply_message pic sent!"
+            callback(ret, e) if callback
+      else
+        @api.send_msg_2group  gid , content , @auth, (ret,e)->
+          callback(ret,e) if callback
 
     # 自杀
     die: (message,info)->
@@ -253,7 +257,7 @@ class QQBot
             @update_group_member {name:gname} ,(ret, ret_gname, error)=>
                 log.info "√ group #{ret_gname} memeber fetched"
                 groupinfo = @get_group {name:ret_gname}
-                log.info "group id", groupinfo.gid, "^^^^^^^^^^^^^"
+                log.info "group id", groupinfo.gid
                 group = new Group(@, groupinfo.gid)
                 @dispatcher.add_listener [group,"dispatch"]
                 log.info "dispatched..."
@@ -270,6 +274,7 @@ class Group
     constructor: (@bot,@gid)->
     # this send method seems no useful?
     send: (content , callback)->
+        console.log "hubot go over here"
         @bot.send_message_to_group  @gid , content , (ret,e)->
             callback(ret,e) if callback
 

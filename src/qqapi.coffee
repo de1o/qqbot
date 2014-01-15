@@ -129,13 +129,15 @@ exports.send_msg_2buddy = (to_uin , msg , auth_opts ,callback)->
         log.debug 'send2user',jsons ret
         callback( ret , e )
 
-exports.upload_img_2group = (auth_opts, callback)->
+
+
+exports.upload_img_2group = (picurl, auth_opts, callback)->
     url = "http://up.web2.qq.com/cgi-bin/cface_upload?time=" + Date.now().toString()
     params = [
         {name: "from", value: "control"}
         {name: "f", value: "EQQ.Model.ChatMsg.callbackSendPicGroup"}
         {name: "vfwebqq", value: auth_opts.vfwebqq}
-        {name: "custom_face", filename: "group_upload.jpg", "Content-Type": "image/jpeg", value: "/Users/Sai/Downloads/hailuo.jpg"} # TODO这个value待获取
+        {name: "custom_face", filename: "group_upload.png", "Content-Type": "image/png", value: picurl}
         {name: "fileid", value: 8}
     ]
     log.debug "sending upload request"
@@ -155,11 +157,12 @@ exports.send_tmpimg_2group = (tmpImg, gid, gcode, auth_opts, callback)->
         content: "[[\"cface\",\"group\",\"#{tmpImg}\"],\"\",\"\",[\"font\",{\"name\":\"微软雅黑\",\"size\":\"10\",\"style\":[0,0,0],\"color\":\"666699\"}]]"
         clientid: opt.clientid
         psessionid: opt.psessionid
-    
+
     params = 
         r: jsons r
         clientid: opt.clientid
         psessionid: opt.psessionid
+    
     log.debug "sending image..."
     client.post {url: url}, params, (ret, e)->
         log.debug "send_tmpimg_2group", jsons ret

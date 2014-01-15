@@ -4,6 +4,11 @@ querystring  = require 'querystring'
 URL  = require('url')
 jsons = JSON.stringify
 fs = require 'fs'
+request = require 'request'
+streams = require 'memory-streams'
+path = require 'path'
+im = require "imagemagick"
+gm = require "gm"
 
 # 剥离出来的 HttpClient ，目前仅适合 qqapi 使用
 # 返回值：已经解析的json
@@ -17,8 +22,8 @@ global_cookies = (cookie)->
 
 mboundary = "------WebKitFormBoundaryqBJ7wdNDl8BgnBFD"
 
-format_multipart_data = (options) ->
-    imgdata
+format_multipart_data = (options, picdata) ->
+    fs.writeFileSync("./thispic.jpg", picdata)
     rstring = ""
     for item in options
         rstring += mboundary + "\r\n"
@@ -34,7 +39,6 @@ format_multipart_data = (options) ->
             rstring += "Content-Type: "
             rstring += item["Content-Type"]
             rstring += "\r\n"
-            imgdata = fs.readFileSync(item["value"])
             rstring += "\r\n"
             rstring += "FILEDATA"
         else
@@ -45,22 +49,45 @@ format_multipart_data = (options) ->
     parts = rstring.split "FILEDATA"
     parts0 = new Buffer parts[0]
     parts1 = new Buffer parts[1]
+    imgdata = new Buffer picdata, 'binary'
+    console.log "before concat"
     multipartBody = Buffer.concat [parts0, imgdata, parts1]
+    console.log "after concat"
     multipartBody
 
+downloadpic = (uri, callback) ->
+    request.head uri, (err, resp, body) =>
+        console.log('content-type:', resp.headers['content-type']);
+        console.log('content-length:', resp.headers['content-length']);
+        filename = Date.now() + path.basename(uri)
+        console.log "start pipe"
+        r = request(uri).pipe fs.createWriteStream(filename)
+        r.on 'close', () =>
+            console.log("fs closed")
+            gm(filename).quality(10)
+            .write filename, (err) =>
+                console.log "#{resp.headers['content-type']} #{filename} done" if !err
+                if resp.headers['content-type'] != "image/jpeg"
+                    im.convert [filename, filename+".jpg"], (err, stdout) =>
+                        throw err if err
+                        console.log "converted to jpg"
+                        callback uri, filename
+                else
+                    callback uri, filename
 
 
-http_request = (options , params , multi_flag, callback) ->
+
+http_request = (options , params , picdata, callback) ->
     aurl = URL.parse( options.url )
     options.host = aurl.host
     options.path = aurl.path
     options.headers ||= {}
     client =  if aurl.protocol == 'https:' then https else http
-    
+
     body = ''
     if params and options.method == 'POST'
-        if multi_flag
-            data = format_multipart_data params
+        if picdata
+            data = format_multipart_data params, picdata
             options.headers['Content-Type'] = 'multipart/form-data; boundary=----WebKitFormBoundaryqBJ7wdNDl8BgnBFD'
             options.headers['Content-Length'] = data.length
         else    
@@ -114,7 +141,20 @@ http_post = (options , body, callback) ->
 
 http_multip_post = (options, body, callback) ->
     options.method = 'POST'
-    http_request( options , body , true, callback)
+    picurl = ""
+    for item in body
+        if item.name == "custom_face"
+            picurl = item.value
+            item.value = "upload.jpg"
+    console.log "picurl", picurl
+    if picurl.match "^http"
+        console.log "fetch http pic"
+        downloadpic picurl, (url, filename) =>
+            picdata = fs.readFileSync filename
+            http_request( options , body , picdata, callback)
+            fs.unlinkSync(filename)
+    else
+        http_request( options , body , null, callback)
 
 
 # 导出方法

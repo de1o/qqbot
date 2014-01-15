@@ -1,9 +1,7 @@
 {
   "name": "hubot-qq",
   "version": "1.1.3",
-
   "author": "xhan",
-
   "keywords": [
     "qqbot",
     "hubot",
@@ -11,30 +9,29 @@
     "qq",
     "webqq"
   ],
-
   "description": "QQ adapter for Hubot, and also A dependence robot lives on webQQ",
-
-  "licenses": [{
-    "type": "MIT",
-    "url": "https://raw.github.com/xhan/qqbot/master/LICENSE"
-  }],
-
-  "repository" : {
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://raw.github.com/xhan/qqbot/master/LICENSE"
+    }
+  ],
+  "repository": {
     "type": "git",
     "url": "https://github.com/xhan/qqbot.git"
   },
-
   "dependencies": {
     "scoped-http-client": ">= 0.9.8",
-    "log":                ">= 1.4.0",
-    "js-yaml" :           ">= 3.0.0"
+    "log": ">= 1.4.0",
+    "js-yaml": ">= 3.0.0",
+    "request": ">= 2.31.0",
+    "memory-streams": ">= 0.0.3",
+    "imagemagick": ">= 0.1.3",
+    "gm": ">= 1.14.2"
   },
-
   "engines": {
     "node": ">= 0.10.x",
-    "npm":  ">= 1.1.x"
+    "npm": ">= 1.1.x"
   },
-
   "main": "./src/hubot-qq"
-
 }
